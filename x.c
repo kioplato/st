@@ -1032,20 +1032,93 @@ xloadfonts(const char *fontstr, double fontsize)
 	win.cw = ceilf(dc.font.width * cwscale);
 	win.ch = ceilf(dc.font.height * chscale);
 
-	FcPatternDel(pattern, FC_SLANT);
-	FcPatternAddInteger(pattern, FC_SLANT, FC_SLANT_ITALIC);
-	if (xloadfont(&dc.ifont, pattern))
-		die("can't open font %s\n", fontstr);
+	if (ifont) {
+		FcPattern *ipattern;
+		if (fontstr[0] == '-')
+			ipattern = XftXlfdParse(ifont, False, False);
+		else
+			ipattern = FcNameParse((const FcChar8 *)ifont);
 
-	FcPatternDel(pattern, FC_WEIGHT);
-	FcPatternAddInteger(pattern, FC_WEIGHT, FC_WEIGHT_BOLD);
-	if (xloadfont(&dc.ibfont, pattern))
-		die("can't open font %s\n", fontstr);
+		if (!ipattern)
+			die("can't open specified italics font %s\n", ifont);
 
-	FcPatternDel(pattern, FC_SLANT);
-	FcPatternAddInteger(pattern, FC_SLANT, FC_SLANT_ROMAN);
-	if (xloadfont(&dc.bfont, pattern))
-		die("can't open font %s\n", fontstr);
+		if (FcPatternGetDouble(ipattern, FC_PIXEL_SIZE, 0, &fontval) == FcResultMatch ||
+			FcPatternGetDouble(ipattern, FC_SIZE, 0, &fontval) == FcResultMatch)
+			die("user specified style fonts can't set 'pixelsize' or 'size'\n");
+
+		FcPatternAddDouble(ipattern, FC_PIXEL_SIZE, usedfontsize);
+
+		if (xloadfont(&dc.ifont, ipattern))
+			die("can't open font %s\n", ifont);
+
+		FcPatternDestroy(ipattern);
+	} else {
+		FcPatternDel(pattern, FC_SLANT);
+		FcPatternAddInteger(pattern, FC_SLANT, FC_SLANT_ITALIC);
+
+		if (xloadfont(&dc.ifont, pattern))
+			die("can't open font %s\n", fontstr);
+	}
+
+	if (ibfont) {
+		FcPattern *ibpattern;
+		if (fontstr[0] == '-')
+			ibpattern = XftXlfdParse(ibfont, False, False);
+		else
+			ibpattern = FcNameParse((const FcChar8 *)ibfont);
+
+		if (!ibpattern)
+			die("can't open specified bold italic font %s\n", ibfont);
+
+		if (FcPatternGetDouble(ibpattern, FC_PIXEL_SIZE, 0, &fontval) == FcResultMatch ||
+			FcPatternGetDouble(ibpattern, FC_SIZE, 0, &fontval) == FcResultMatch)
+			die("user specified style fonts can't set 'pixelsize' or 'size'\n");
+
+		FcPatternAddDouble(ibpattern, FC_PIXEL_SIZE, usedfontsize);
+
+		if (xloadfont(&dc.ibfont, ibpattern))
+			die("can't open font %s\n", ibfont);
+
+		FcPatternDestroy(ibpattern);
+	} else {
+		FcPatternDel(pattern, FC_SLANT);
+		FcPatternAddInteger(pattern, FC_SLANT, FC_SLANT_ITALIC);
+		FcPatternDel(pattern, FC_WEIGHT);
+		FcPatternAddInteger(pattern, FC_WEIGHT, FC_WEIGHT_BOLD);
+
+		if (xloadfont(&dc.ibfont, pattern))
+			die("can't open font %s\n", fontstr);
+	}
+
+	if (bfont) {
+		FcPattern *bpattern;
+		if (fontstr[0] == '-')
+			bpattern = XftXlfdParse(bfont, False, False);
+		else
+			bpattern = FcNameParse((const FcChar8 *)bfont);
+
+		if (!bpattern)
+			die("can't open specified bold font %s\n", bfont);
+
+		if (FcPatternGetDouble(bpattern, FC_PIXEL_SIZE, 0, &fontval) == FcResultMatch ||
+			FcPatternGetDouble(bpattern, FC_SIZE, 0, &fontval) == FcResultMatch)
+			die("user specified style fonts can't set 'pixelsize' or 'size'\n");
+
+		FcPatternAddDouble(bpattern, FC_PIXEL_SIZE, usedfontsize);
+
+		if (xloadfont(&dc.bfont, bpattern))
+			die("can't open font %s\n", bfont);
+
+		FcPatternDestroy(bpattern);
+	} else {
+		FcPatternDel(pattern, FC_SLANT);
+		FcPatternAddInteger(pattern, FC_SLANT, FC_SLANT_ROMAN);
+		FcPatternDel(pattern, FC_WEIGHT);
+		FcPatternAddInteger(pattern, FC_WEIGHT, FC_WEIGHT_BOLD);
+
+		if (xloadfont(&dc.bfont, pattern))
+			die("can't open font %s\n", fontstr);
+	}
 
 	FcPatternDestroy(pattern);
 }

@@ -6,6 +6,15 @@
  * font: see http://freedesktop.org/software/fontconfig/fontconfig-user.html
  */
 static char *font = "Liberation Mono:pixelsize=12:antialias=true:autohint=true";
+/*
+ * Manually specify bold, italic and bold italic fonts.
+ * 'pixelsize' or 'size' must not be specified in these fonts.
+ * The 'pixelsize' or 'size' specified in the above font will be used.
+ */
+static char *ifont = NULL;
+static char *bfont = NULL;
+static char *ibfont = NULL;
+
 static int borderpx = 2;
 
 /*
